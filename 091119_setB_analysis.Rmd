@@ -211,260 +211,30 @@ C4.df<-extract.treatment.observation("4C",list.observation.a,key)
 
 ```
 
-
-
-Handle data for plot
-
-```{r warning=TRUE}
-for.plot<-function(df){
-  mat<-as.matrix(df)
-  vec<-NULL
-  vec.x<-NULL
-  df.plot<-as.data.frame(matrix(0,0,2))  
-  for(i in 1:ncol(mat)){
-        vec.temp<-mat[,i]
-        vec.x.temp<-rep(i,nrow(mat))
-        vec<-c(vec,vec.temp)
-        vec.x<-c(vec.x,vec.x.temp)
-    }
-  df.plot<-data.frame("Day"=vec.x,"Obser"=vec)
-  return(df.plot)
-}
-A1.plot<-for.plot(A1.q)
-A1.plot$Day<-as.numeric(A1.plot$Day)
-A2.plot<-for.plot(A2.q)
-A2.plot$Day<-as.numeric(A2.plot$Day)
-A3.plot<-for.plot(A3.q)
-A3.plot$Day<-as.numeric(A3.plot$Day)
-A4.plot<-for.plot(A4.q)
-A4.plot$Day<-as.numeric(A4.plot$Day)
-
-B1.plot<-for.plot(B1.q)
-B1.plot$Day<-as.numeric(B1.plot$Day)
-B2.plot<-for.plot(B2.q)
-B2.plot$Day<-as.numeric(B2.plot$Day)
-B3.plot<-for.plot(B3.q)
-B3.plot$Day<-as.numeric(B3.plot$Day)
-B4.plot<-for.plot(B4.q)
-B4.plot$Day<-as.numeric(B4.plot$Day)
-
-
-
-```
-
-
-Plot
+The effect of untreated is corrected
+TAX(-)103(1C) minus the effect of TAX(-)(1A)
+TAX(+)103(2C) minus the effect of TAX(+)(2A)
 
 
 ```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=A1.plot,aes(A1.plot$Day,A1.plot$Obser),inherit.aes = F,col=brewer.pal(11,'Spectral')[1] ,alpha=0.09)
-#fig2<-fig2 +  geom_line(data=A1.plot, aes(x=A1.plot$Day, y=A1.plot$Obser),inherit.aes = F,alpha=1, col=  brewer.pal(11,'Spectral')[1])
-fig2<-fig2 +  geom_point(data=A2.plot,aes(A2.plot$Day,A2.plot$Obser),inherit.aes = F,col=brewer.pal(11,'Spectral')[2] ,alpha=0.09)
-#fig2<-fig2 +  geom_line(data=A2.plot, aes(x=A2.plot$Day, y=A2.plot$Obser),inherit.aes = F,alpha=1, col=  brewer.pal(11,'Spectral')[2])
-fig2<-fig2 +  geom_point(data=A3.plot,aes(A3.plot$Day,A3.plot$Obser),inherit.aes = F,col=brewer.pal(11,'Spectral')[3] ,alpha=0.09)
-#fig2<-fig2 +  geom_line(data=A3.plot, aes(x=A3.plot$Day, y=A3.plot$Obser),inherit.aes = F,alpha=1, col=  brewer.pal(11,'Spectral')[3])
-fig2<-fig2 +  geom_point(data=A4.plot,aes(A4.plot$Day,A4.plot$Obser),inherit.aes = F,col=brewer.pal(11,'Spectral')[4] ,alpha=0.09)
-#fig2<-fig2 +  geom_line(data=A4.plot, aes(x=A4.plot$Day, y=A4.plot$Obser),inherit.aes = F,alpha=1, col=  brewer.pal(11,'Spectral')[4])
-fig2<-fig2 + ylim(0,2000)
-fig2
-
-
-```
-
-
-Plot the average of every treatment
-
-```{r}
-#list data frame columns number of day and observation per treatmetn
-#the function aggragate all the observation togther
-mean.plot<-function(list.observation){
-  ll<-list()
-  name<-names(list.observation)
-  for (i in 1:length(list.observation)){
-      df.temp<-as.data.frame(list.observation.a[[paste0(name[i])]])
-      time.col<-c(1:ncol(df.temp))
-      mean.vec<-apply(df.temp,2,mean)
-      sd.vec<-apply(df.temp,2,sd)
-      name.vec<-rep(name[i],ncol(df.temp))
-      df<-data.frame("mean"=mean.vec,"sd"=sd.vec,"time"=time.col,"treatment"=name.vec)
-      ll[[i]]<-df
-      rm(df,name.vec,sd.vec,mean.vec,df.temp)
-  }
-  return(ll)
-}
-
-
-plot.mean.sd<-mean.plot(list.observation.a)
-#extract all the plots
-df.plot.aggragets<-as.data.frame(matrix(NA,0,4))
-colnames(df.plot.aggragets)<-c("mean","sd","time","treatment")
-for (i in 1:length(plot.mean.sd)){
-  df.temp<-plot.mean.sd[[i]]
-  df.plot.aggragets<-rbind(df.plot.aggragets,df.temp)
-}
-str(df.plot.aggragets)
-df.plot.aggragets$treatment<-as.character(df.plot.aggragets$treatment)
-#aggraget data acrding to key table - change well to tretment
-#unique.df.well
-for (i in 1:length(unique.df.well)){
-    temp.ind<-which(df.plot.aggragets$treatment==unique.df.well[i])
-    key.ind<-which(key$`as.character(key)`==unique.df.well[i])
-    key.temp<-unique(key[key.ind,2])
-    df.plot.aggragets[temp.ind,4]<-key.temp
-}
-
-
-
-```
-
-PLOT mean
-
-```{r}
-fig2<-fig2 + geom_point(data=drc.ctrl_A2,aes(vec.day,vec.num),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_A2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#FFED6F")
-fig2<-fig2 + geom_line(data=newdata.t_A2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_A3,aes(vec.day,vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_A3, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
-fig2<-fig2 + geom_line(data=newdata.t_A3, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_A4,aes(vec.day,vec.num),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_A4, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#B3DE69")
-fig2<-fig2 + geom_line(data=newdata.t_A4, aes(x=day0t, y=p.t),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-
-fig2<-
-  ggplot(df.plot.aggragets,aes(df.plot.aggragets$time,df.plot.aggragets$mean,group=df.plot.aggragets$treatment))+
-  geom_line()
-  theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="A", x="dayes", y="Cell number(%)") +
-ylim(0.5,1)+
-  scale_x_continuous(breaks = (seq(1, 11, by = 1)))+
-  geom_text(aes(x=14, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-
-
-
-
-
-
-
-In betwenn groups comperssions: 
-
-Httg103 vs httg103+tax
-
-The data is from the file Tax1bp_hIPSC_analysis_report_020419 (uder Shirren on biowuld directory local computure)
-
-Plot start from day2/3
-
-
-
-
-
-
-
-
-```{r}
-
-vector.name<-names(list.observation.a)
-list.slope<-list()
-
-list.df<-list.observation.a
-
-make.list<-function(input.list){
-  df.list<-as.data.frame(input.list)
-  ls.temp<-list()
-  for (i in 1:11){
-    vec.cellnumber<-as.vector(t(df.list[i,2:11]))
-    day<-1:11
-    df<-as.data.frame(cbind(day,vec.cellnumber))
-    colnames(df)<-c("day","cellNumber")
-    drc.plot<-try(drm(df$cellNumber~df$day,data = df, fct = EXD.3(),na.action = na.omit))
-    if (inherits(drc.plot,"try-error")){
-      next
-    } else {
-      sl<-summary(drc.plot)
-      slope<-sl$coefficients[[3]]
-      slope.se<-sl$coefficients[[6]]
-      pv.slope<-sl$coefficients[[9]]
-      ls.temp[[i]]<-as.data.frame(cbind(slope,slope.se,pv.slope))
-    }
-  }
-  return(ls.temp)
-  
-}
-
-
-
-list.slope<-list()
-ll<-list()
-for (z in 1:length(vector.name)){
-  ll<-list.df[[z]]
-  list.slope[[paste0(vector.name[z])]]<-make.list(ll)
-  rm(ll)
-}
-
-l.ind<-list()
-length(list.slope)
-for (i in 1:11){
-  df.l<-ldply(list.slope[[paste0(vector.name[i])]],data.frame)
-  ind<-which(df.l$pv.slope < 0.05)
-  l.ind[[paste0(vector.name[i])]]<-ind
-  }
-
-
-######
-norm<-function(input){
-  df<-input
-  for (i in 1:nrow(df)){
-    reff<-df[i,2]
-    df[i,]<-(df[i,])/reff
-  }
-  return(df)
-}
-
-
-
-A1.slop<-rbind(ldply(list.slope$B02, data.frame),ldply(list.slope$C02, data.frame),ldply(list.slope$D02, data.frame),ldply(list.slope$E02, data.frame))
-A2.slop<-rbind(ldply(list.slope$B04, data.frame),ldply(list.slope$C04, data.frame),ldply(list.slope$D04, data.frame),ldply(list.slope$E04, data.frame))
-A3.slop<-rbind(ldply(list.slope$B06, data.frame),ldply(list.slope$C06, data.frame),ldply(list.slope$D06, data.frame),ldply(list.slope$E06, data.frame))
-A4.slop<-rbind(ldply(list.slope$B08, data.frame),ldply(list.slope$C08, data.frame),ldply(list.slope$D08, data.frame),ldply(list.slope$E08, data.frame))
-
-B1.slop<-rbind(ldply(list.slope$B03, data.frame),ldply(list.slope$C03, data.frame),ldply(list.slope$D03, data.frame),ldply(list.slope$E03, data.frame))
-B2.slop<-rbind(ldply(list.slope$B05, data.frame),ldply(list.slope$C05, data.frame),ldply(list.slope$D05, data.frame),ldply(list.slope$E05, data.frame))
-B3.slop<-rbind(ldply(list.slope$B07, data.frame),ldply(list.slope$C07, data.frame),ldply(list.slope$D07, data.frame),ldply(list.slope$E07, data.frame))
-B4.slop<-rbind(ldply(list.slope$B09, data.frame),ldply(list.slope$C09, data.frame),ldply(list.slope$D09, data.frame),ldply(list.slope$E09, data.frame))
-
-C1.slop<-rbind(ldply(list.slope$F02, data.frame),ldply(list.slope$F03, data.frame),ldply(list.slope$G02, data.frame),ldply(list.slope$G03, data.frame))
-C2.slop<-rbind(ldply(list.slope$F04, data.frame),ldply(list.slope$F05, data.frame),ldply(list.slope$G04, data.frame),ldply(list.slope$G05, data.frame))
-C3.slop<-rbind(ldply(list.slope$F06, data.frame),ldply(list.slope$F07, data.frame),ldply(list.slope$G06, data.frame),ldply(list.slope$G07, data.frame))
-C4.slop<-rbind(ldply(list.slope$F08, data.frame),ldply(list.slope$F09, data.frame),ldply(list.slope$G08, data.frame),ldply(list.slope$G09, data.frame))
-
-#####
-
-
-
-
-#input<-data frame contain observation per 
-################function
 rm(df.ctrl.drc)
-drc.table<-function(input.df){
-  #browser()
+drc.table<-function(input.df,df.correc){
+  if (is.null(df.correc)){
+     vec.delta=rep(1,12)
+  }else{
+      time<-unique(df.correc[,1])
+      l<-list()
+      for (i in time){
+        df.temp<-df.correc %>% filter(df.correc[,1]==i)
+        vec<-mean(df.temp[,2])
+        l[[i]]<-vec
+      }
+      df.mat<-as.data.frame(l,stringsAsFactors=F)
+      df.mat<-as.data.frame(t(df.mat),stringsAsFactors=F)
+      df.mat$time<-time
+      vec.delta<-1-df.mat$V1
+      vec.delta<-1+vec.delta
+  }
   df.ctrl.drc<-as.data.frame(matrix(0,0,2))
   colnames(df.ctrl.drc)<-c("day","cellNumber")
   colnames(input.df)<-c(1:11)
@@ -474,18 +244,18 @@ drc.table<-function(input.df){
   ctrl.temp<-rep(1,length(input[,1]))
   li[[1]]<-ctrl.temp
   for (i in 2:11){
-    ctrl.temp<-(input[,i])/mean.c
-    li[[paste0(i)]]<-ctrl.temp
+        ctrl.temp<-(input[,i]*vec.delta[i])/mean.c
+        li[[paste0(i)]]<-ctrl.temp
   }
   vec.num<-as.vector(li[[1]])
   vec.day<-rep(1,length(vec.num))
   df.ctrl.drc<-cbind(vec.day,vec.num)
   
   for (j in 2:11){
-    vec.num<-as.vector(li[[paste0(j)]])
-    vec.day<-rep(j,length(vec.num))  
-    df.ctrl.drc.temp<-cbind(vec.day,vec.num)
-    df.ctrl.drc<-rbind(df.ctrl.drc,df.ctrl.drc.temp)
+        vec.num<-as.vector(li[[paste0(j)]])
+        vec.day<-rep(j,length(vec.num))  
+        df.ctrl.drc.temp<-cbind(vec.day,vec.num)
+        df.ctrl.drc<-rbind(df.ctrl.drc,df.ctrl.drc.temp)
   }
   
   df.ctrl.drc<-as.data.frame(df.ctrl.drc)
@@ -493,18 +263,18 @@ drc.table<-function(input.df){
 }
 ########
 
-drc.ctrl_A1<-drc.table(A1.df)
-drc.ctrl_A2<-drc.table(A2.df)
-drc.ctrl_A3<-drc.table(A3.df)
-drc.ctrl_A4<-drc.table(A4.df)
+drc.ctrl_A1<-drc.table(A1.df,NULL)
+drc.ctrl_A2<-drc.table(A2.df,NULL)
+drc.ctrl_A3<-drc.table(A3.df,NULL)
+drc.ctrl_A4<-drc.table(A4.df,NULL)
 
 drc.ctrl_B1<-drc.table(B1.df)
 drc.ctrl_B2<-drc.table(B2.df)
 drc.ctrl_B3<-drc.table(B3.df)
 drc.ctrl_B4<-drc.table(B4.df)
 
-drc.ctrl_C1<-drc.table(C1.df)
-drc.ctrl_C2<-drc.table(C2.df)
+drc.ctrl_C1<-drc.table(C1.df,drc.ctrl_A1)
+drc.ctrl_C2<-drc.table(C2.df,drc.ctrl_A2)
 drc.ctrl_C3<-drc.table(C3.df)
 drc.ctrl_C4<-drc.table(C4.df)
  
@@ -612,677 +382,40 @@ expend.table<-function(df.input){
       return(newdata.t)
 }
 
-drc.ctrl_A1<-add.df("A1",drc.ctrl_A1)
-drc.ctrl_A2<-add.df("A2",drc.ctrl_A2)
-drc.ctrl_A3<-add.df("A3",drc.ctrl_A3)
-drc.ctrl_A4<-add.df("A4",drc.ctrl_A4)
-
-drc.ctrl_B1<-add.df("B1",drc.ctrl_B1)
-drc.ctrl_B2<-add.df("B2",drc.ctrl_B2)
-drc.ctrl_B3<-add.df("B3",drc.ctrl_B3)
-drc.ctrl_B4<-add.df("B4",drc.ctrl_B4)
+# drc.ctrl_A1<-add.df("A1",drc.ctrl_A1)
+# drc.ctrl_A2<-add.df("A2",drc.ctrl_A2)
+# drc.ctrl_A3<-add.df("A3",drc.ctrl_A3)
+# drc.ctrl_A4<-add.df("A4",drc.ctrl_A4)
+# 
+# drc.ctrl_B1<-add.df("B1",drc.ctrl_B1)
+# drc.ctrl_B2<-add.df("B2",drc.ctrl_B2)
+# drc.ctrl_B3<-add.df("B3",drc.ctrl_B3)
+# drc.ctrl_B4<-add.df("B4",drc.ctrl_B4)
 
 drc.ctrl_C1<-add.df("C1",drc.ctrl_C1)
 drc.ctrl_C2<-add.df("C2",drc.ctrl_C2)
-drc.ctrl_C3<-add.df("C3",drc.ctrl_C3)
-drc.ctrl_C4<-add.df("C4",drc.ctrl_C4)
+# drc.ctrl_C3<-add.df("C3",drc.ctrl_C3)
+# drc.ctrl_C4<-add.df("C4",drc.ctrl_C4)
 
 
-newdata.t_A1<-expend.table(drc.ctrl_A1)
-newdata.t_A2<-expend.table(drc.ctrl_A2)
-newdata.t_A3<-expend.table(drc.ctrl_A3)
-newdata.t_A4<-expend.table(drc.ctrl_A4)
-
-newdata.t_B1<-expend.table(drc.ctrl_B1)
-newdata.t_B2<-expend.table(drc.ctrl_B2)
-newdata.t_B3<-expend.table(drc.ctrl_B3)
-newdata.t_B4<-expend.table(drc.ctrl_B4)
+# newdata.t_A1<-expend.table(drc.ctrl_A1)
+# newdata.t_A2<-expend.table(drc.ctrl_A2)
+# newdata.t_A3<-expend.table(drc.ctrl_A3)
+# newdata.t_A4<-expend.table(drc.ctrl_A4)
+# 
+# newdata.t_B1<-expend.table(drc.ctrl_B1)
+# newdata.t_B2<-expend.table(drc.ctrl_B2)
+# newdata.t_B3<-expend.table(drc.ctrl_B3)
+# newdata.t_B4<-expend.table(drc.ctrl_B4)
 
 newdata.t_C1<-expend.table(drc.ctrl_C1)
 newdata.t_C2<-expend.table(drc.ctrl_C2)
-newdata.t_C3<-expend.table(drc.ctrl_C3)
-newdata.t_C4<-expend.table(drc.ctrl_C4)
+# newdata.t_C3<-expend.table(drc.ctrl_C3)
+# newdata.t_C4<-expend.table(drc.ctrl_C4)
 
 
 
 ```
-
-A
-
-
-
-```{r,include = TRUE}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=drc.ctrl_A1,aes(vec.day,vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0,position = "stack")
-#fig2<-fig2 + geom_ribbon(data=newdata.t_A1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4",position ="stack")
-fig2<-fig2 +  geom_line(data=newdata.t_A1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4",position = "stack")
-fig2<-fig2 + geom_point(data=drc.ctrl_A2,aes(vec.day,vec.num),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0,position = "stack")
-#fig2<-fig2 +   geom_ribbon(data=newdata.t_A2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#FFED6F",position ="stack")
-fig2<-fig2 + geom_line(data=newdata.t_A2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1,position = "stack")
-fig2<-fig2 + geom_point(data=drc.ctrl_A3,aes(vec.day,vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0,position = "stack")
-#fig2<-fig2 +   geom_ribbon(data=newdata.t_A3, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C",position ="stack")
-fig2<-fig2 + geom_line(data=newdata.t_A3, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1,position = "stack")
-fig2<-fig2 + geom_point(data=drc.ctrl_A4,aes(vec.day,vec.num),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0,position ="stack")
-#fig2<-fig2 +   geom_ribbon(data=newdata.t_A4, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#B3DE69",position ="stack")
-fig2<-fig2 + geom_line(data=newdata.t_A4, aes(x=day0t, y=p.t),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1,position ="stack")
-fig2<-fig2 + ylim(0.5,1)
-fig2
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="A", x="dayes", y="Cell number(%)") +
-  scale_x_continuous(breaks = (seq(1, 11, by = 1)))+
-  geom_text(aes(x=14, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-B
-
-
-
-```{r, include = TRUE}
-
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=drc.ctrl_B1,aes(drc.ctrl_B1$vec.day,drc.ctrl_B1$vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0)
-fig2<-fig2 + geom_ribbon(data=newdata.t_B1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4")
-fig2<-fig2 +  geom_line(data=newdata.t_B1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-
-fig2<-fig2 + geom_point(data=drc.ctrl_B2,aes(drc.ctrl_B2$vec.day,drc.ctrl_B2$vec.num),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_B2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#FFED6F")
-fig2<-fig2 + geom_line(data=newdata.t_B2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_B3,aes(drc.ctrl_B3$vec.day,drc.ctrl_B3$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_B3, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
-fig2<-fig2 + geom_line(data=newdata.t_B3, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_B4,aes(drc.ctrl_B4$vec.day,drc.ctrl_B4$vec.num),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_B4, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#B3DE69")
-fig2<-fig2 + geom_line(data=newdata.t_B4, aes(x=day0t, y=p.t),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="B", x="dayes", y="Cell number(%)") +
-ylim(0,1.3)+
-  scale_x_continuous(breaks = (seq(1, 11, by = 1)))+
-  geom_text(aes(x=14, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-
-
-
-
-C
-
-```{r, include = TRUE}
-#Chose color
-brewer.pal(n = 6, name = "Paired")
-
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=drc.ctrl_C1,aes(drc.ctrl_C1$vec.day,drc.ctrl_C1$vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0)
-fig2<-fig2 + geom_ribbon(data=newdata.t_C1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4")
-fig2<-fig2 +  geom_line(data=newdata.t_C1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-
-fig2<-fig2 + geom_point(data=drc.ctrl_C2,aes(drc.ctrl_C2$vec.day,drc.ctrl_C2$vec.num),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_C2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#FFED6F")
-fig2<-fig2 + geom_line(data=newdata.t_C2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_C3,aes(drc.ctrl_C3$vec.day,drc.ctrl_C3$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_C3, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
-fig2<-fig2 + geom_line(data=newdata.t_C3, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-
-fig2<-fig2 + geom_point(data=drc.ctrl_C4,aes(drc.ctrl_C2$vec.day,drc.ctrl_C2$vec.num),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_C4, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#B3DE69")
-fig2<-fig2 + geom_line(data=newdata.t_C4, aes(x=day0t, y=p.t),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="C", x="dayes", y="Cell number(%)") +
-ylim(0,1.3)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=14, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=14, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-        
-        #ggsave("021319.png",plot = last_plot(),width = 6,height = 4)
-```
-Statistacle analysis of the plots
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Retain only the 25% to 75% quintile and replace all the reminaing with the midian of the values
-
-
-```{r}
-
-make.quantile<-function(df){
-    mat<-as.matrix(df)
-    ll.q<-list()
-    for(i in 1:ncol(mat)){
-        q<-quantile(mat[,i])
-        value<-mat[mat[,i]>q[["25%"]] & mat[,i]<q[["75%"]],i]     
-        num.t<-length(mat[,i])
-        num.median<-num.t-length(value)
-        median.q<-median(value)
-        vec<-c(value,rep(median.q,num.median))
-        ll.q[[i]]<-vec
-    }
-      df.q<-as.data.frame(ll.q,stringsAsFactors=F)
-      colnames(df.q)<-c(rep("vec",11))
-      return(df.q)
-}
-
-A1.q<-make.quantile(A1.df)
-A2.q<-make.quantile(A2.df)
-A3.q<-make.quantile(A3.df)
-A4.q<-make.quantile(A4.df)
-
-B1.q<-make.quantile(B1.df)
-B2.q<-make.quantile(B2.df)
-B3.q<-make.quantile(B3.df)
-B4.q<-make.quantile(B4.df)
-
-C1.q<-make.quantile(C1.df)
-C2.q<-make.quantile(C2.df)
-C3.q<-make.quantile(C3.df)
-C4.q<-make.quantile(C4.df)
-
-
-```
-
-
-
-
-
-
-```{r}
-drc.ctrl_A1<-drc.table(A1.q)
-drc.ctrl_A2<-drc.table(A2.q)
-drc.ctrl_A3<-drc.table(A3.q)
-drc.ctrl_A4<-drc.table(A4.q)
-
-drc.ctrl_B1<-drc.table(B1.q)
-drc.ctrl_B2<-drc.table(B2.q)
-drc.ctrl_B3<-drc.table(B3.q)
-drc.ctrl_B4<-drc.table(B4.q)
-
-drc.ctrl_C1<-drc.table(C1.q)
-drc.ctrl_C2<-drc.table(C2.q)
-drc.ctrl_C3<-drc.table(C3.q)
-drc.ctrl_C4<-drc.table(C4.q)
- 
-```
-
-
-
-Creat a plot of means
-
-
-```{r}
-drc.ctrl_A1
-make.mean<-function(df){
-            time<-unique(df[,1])
-            l<-list()
-            for (i in time){
-                df.temp<-df %>% filter(df[,1]==i)
-                vec<-mean(df.temp[,2])
-                l[[i]]<-vec
-            }
-            df.mat<-as.data.frame(l,stringsAsFactors=F)
-            df.mat<-as.data.frame(t(df.mat),stringsAsFactors=F)
-            df.mat$time<-time
-            return(df.mat)
-            }
-
-make.mean(drc.ctrl_A1) 
-A1.mean<-make.mean(drc.ctrl_A1)
-A2.mean<-make.mean(drc.ctrl_A2)
-A3.mean<-make.mean(drc.ctrl_A3)
-A4.mean<-make.mean(drc.ctrl_A4)
-
-B1.mean<-make.mean(drc.ctrl_B1)
-B2.mean<-make.mean(drc.ctrl_B2)
-B3.mean<-make.mean(drc.ctrl_B3)
-B4.mean<-make.mean(drc.ctrl_B4)
-
-C1.mean<-make.mean(drc.ctrl_C1)
-C2.mean<-make.mean(drc.ctrl_C2)
-C3.mean<-make.mean(drc.ctrl_C3)
-C4.mean<-make.mean(drc.ctrl_C4)
-
-```
-
-Combine all the data togther
-
-```{r}
-A1.mean<-make.mean(drc.ctrl_A1)
-A2.mean<-make.mean(drc.ctrl_A2)
-A3.mean<-make.mean(drc.ctrl_A3)
-A4.mean<-make.mean(drc.ctrl_A4)
-
-B1.mean<-make.mean(drc.ctrl_B1)
-B2.mean<-make.mean(drc.ctrl_B2)
-B3.mean<-make.mean(drc.ctrl_B3)
-B4.mean<-make.mean(drc.ctrl_B4)
-
-C1.mean<-make.mean(drc.ctrl_C1)
-C2.mean<-make.mean(drc.ctrl_C2)
-C3.mean<-make.mean(drc.ctrl_C3)
-C4.mean<-make.mean(drc.ctrl_C4)
-
-
-
-mean.A<-data.frame("time"=c(1:11),"A1"=A1.mean$V1,"A2"=A2.mean$V1,"A3"=A3.mean$V1,"A4"=A4.mean$V1)
-mean.A<-mean.A[c(1,2,4,6,8,11),]
-mean.B<-data.frame("time"=c(1:11),"B1"=B1.mean$V1,"B2"=B2.mean$V1,"B3"=B3.mean$V1,"B4"=B4.mean$V1)
-mean.B<-mean.B[c(1,2,4,6,8,11),]
-mean.C<-data.frame("time"=c(1:11),"C1"=C1.mean$V1,"C2"=C2.mean$V1,"C3"=C3.mean$V1,"C4"=C4.mean$V1)
-mean.C<-mean.C[c(1,2,4,6,8,11),]
-View(mean.A)
-str(mean.A)
-```
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.C,aes(mean.C$time,mean.C$C1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.C,aes(mean.C$time,mean.C$C1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="C", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.B,aes(mean.B$time,mean.B$B1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.B,aes(mean.B$time,mean.B$B1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="B", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.A,aes(mean.A$time,mean.A$A1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.A,aes(mean.A$time,mean.A$A1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="A", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-Take the mean of all the sample with no quntile
-
-
-```{r}
-drc.ctrl_A1<-drc.table(A1.df)
-drc.ctrl_A2<-drc.table(A2.df)
-drc.ctrl_A3<-drc.table(A3.df)
-drc.ctrl_A4<-drc.table(A4.df)
-
-drc.ctrl_B1<-drc.table(B1.df)
-drc.ctrl_B2<-drc.table(B2.df)
-drc.ctrl_B3<-drc.table(B3.df)
-drc.ctrl_B4<-drc.table(B4.df)
-
-drc.ctrl_C1<-drc.table(C1.df)
-drc.ctrl_C2<-drc.table(C2.df)
-drc.ctrl_C3<-drc.table(C3.df)
-drc.ctrl_C4<-drc.table(C4.df)
-
-
-
-make.mean(drc.ctrl_A1) 
-A1.mean<-make.mean(drc.ctrl_A1)
-A2.mean<-make.mean(drc.ctrl_A2)
-A3.mean<-make.mean(drc.ctrl_A3)
-A4.mean<-make.mean(drc.ctrl_A4)
-
-B1.mean<-make.mean(drc.ctrl_B1)
-B2.mean<-make.mean(drc.ctrl_B2)
-B3.mean<-make.mean(drc.ctrl_B3)
-B4.mean<-make.mean(drc.ctrl_B4)
-
-C1.mean<-make.mean(drc.ctrl_C1)
-C2.mean<-make.mean(drc.ctrl_C2)
-C3.mean<-make.mean(drc.ctrl_C3)
-C4.mean<-make.mean(drc.ctrl_C4)
-mean.A<-data.frame("time"=c(1:11),"A1"=A1.mean$V1,"A2"=A2.mean$V1,"A3"=A3.mean$V1,"A4"=A4.mean$V1)
-mean.A<-mean.A[c(1,2,4,6,8,11),]
-mean.B<-data.frame("time"=c(1:11),"B1"=B1.mean$V1,"B2"=B2.mean$V1,"B3"=B3.mean$V1,"B4"=B4.mean$V1)
-mean.B<-mean.B[c(1,2,4,6,8,11),]
-mean.C<-data.frame("time"=c(1:11),"C1"=C1.mean$V1,"C2"=C2.mean$V1,"C3"=C3.mean$V1,"C4"=C4.mean$V1)
-mean.C<-mean.C[c(1,2,4,6,8,11),]
-
-
-```
-
-
-
-
-
-
-Generated a fitted slop for palte a
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.C,aes(mean.C$time,mean.C$C1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.C,aes(mean.C$time,mean.C$C1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.C,aes(mean.C$time,mean.C$C4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.C,aes(mean.C$time,mean.C$C4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="C", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.B,aes(mean.B$time,mean.B$B1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.B,aes(mean.B$time,mean.B$B1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.B,aes(mean.B$time,mean.B$B4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.B,aes(mean.B$time,mean.B$B4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="B", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=mean.A,aes(mean.A$time,mean.A$A1),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0.5)
-fig2<-fig2 +  geom_line(data=mean.A,aes(mean.A$time,mean.A$A1),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A2),inherit.aes = F,fill="#FFED6F",col="#FFED6F" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A3),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-fig2<-fig2 + geom_point(data=mean.A,aes(mean.A$time,mean.A$A4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=0.5)
-fig2<-fig2 + geom_line(data=mean.A,aes(mean.A$time,mean.A$A4),inherit.aes = F,fill="#B3DE69",col="#B3DE69" ,alpha=1)
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="A", x="dayes", y="Cell number(%)") +
-ylim(0,1.5)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="1", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="2", y=0.95,inherit.aes = F), color="#FFED6F",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="3", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="4", y=0.85,inherit.aes = F), color="#B3DE69",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
-
-Calculate the slop for plate a
-
-```{r}
-vector.name<-names(list.observation.a)
-list.slope<-list()
-
-list.df<-list.observation.a
-
-make.list<-function(input.list){
-  df.list<-as.data.frame(input.list)
-  ls.temp<-list()
-  for (i in 1:11){
-    vec.cellnumber<-as.vector(t(df.list[i,2:11]))
-    day<-1:11
-    df<-as.data.frame(cbind(day,vec.cellnumber))
-    colnames(df)<-c("day","cellNumber")
-    drc.plot<-try(drm(df$cellNumber~df$day,data = df, fct = EXD.3(),na.action = na.omit))
-    if (inherits(drc.plot,"try-error")){
-      next
-    } else {
-      sl<-summary(drc.plot)
-      slope<-sl$coefficients[[3]]
-      slope.se<-sl$coefficients[[6]]
-      pv.slope<-sl$coefficients[[9]]
-      ls.temp[[i]]<-as.data.frame(cbind(slope,slope.se,pv.slope))
-    }
-  }
-  return(ls.temp)
-  
-}
-
-
-
-list.slope<-list()
-ll<-list()
-for (z in 1:length(vector.name)){
-  ll<-list.df[[z]]
-  list.slope[[paste0(vector.name[z])]]<-make.list(ll)
-  rm(ll)
-}
-
-l.ind<-list()
-length(list.slope)
-for (i in 1:11){
-  df.l<-ldply(list.slope[[paste0(vector.name[i])]],data.frame)
-  ind<-which(df.l$pv.slope < 0.05)
-  l.ind[[paste0(vector.name[i])]]<-ind
-  }
-
-
-######
-norm<-function(input){
-  df<-input
-  for (i in 1:nrow(df)){
-    reff<-df[i,2]
-    df[i,]<-(df[i,])/reff
-  }
-  return(df)
-}
-
-
-
-A1.slop<-rbind(ldply(list.slope$B02, data.frame),ldply(list.slope$C02, data.frame),ldply(list.slope$D02, data.frame),ldply(list.slope$E02, data.frame))
-A2.slop<-rbind(ldply(list.slope$B04, data.frame),ldply(list.slope$C04, data.frame),ldply(list.slope$D04, data.frame),ldply(list.slope$E04, data.frame))
-A3.slop<-rbind(ldply(list.slope$B06, data.frame),ldply(list.slope$C06, data.frame),ldply(list.slope$D06, data.frame),ldply(list.slope$E06, data.frame))
-A4.slop<-rbind(ldply(list.slope$B08, data.frame),ldply(list.slope$C08, data.frame),ldply(list.slope$D08, data.frame),ldply(list.slope$E08, data.frame))
-
-B1.slop<-rbind(ldply(list.slope$B03, data.frame),ldply(list.slope$C03, data.frame),ldply(list.slope$D03, data.frame),ldply(list.slope$E03, data.frame))
-B2.slop<-rbind(ldply(list.slope$B05, data.frame),ldply(list.slope$C05, data.frame),ldply(list.slope$D05, data.frame),ldply(list.slope$E05, data.frame))
-B3.slop<-rbind(ldply(list.slope$B07, data.frame),ldply(list.slope$C07, data.frame),ldply(list.slope$D07, data.frame),ldply(list.slope$E07, data.frame))
-B4.slop<-rbind(ldply(list.slope$B09, data.frame),ldply(list.slope$C09, data.frame),ldply(list.slope$D09, data.frame),ldply(list.slope$E09, data.frame))
-
-C1.slop<-rbind(ldply(list.slope$F02, data.frame),ldply(list.slope$F03, data.frame),ldply(list.slope$G02, data.frame),ldply(list.slope$G03, data.frame))
-C2.slop<-rbind(ldply(list.slope$F04, data.frame),ldply(list.slope$F05, data.frame),ldply(list.slope$G04, data.frame),ldply(list.slope$G05, data.frame))
-C3.slop<-rbind(ldply(list.slope$F06, data.frame),ldply(list.slope$F07, data.frame),ldply(list.slope$G06, data.frame),ldply(list.slope$G07, data.frame))
-C4.slop<-rbind(ldply(list.slope$F08, data.frame),ldply(list.slope$F09, data.frame),ldply(list.slope$G08, data.frame),ldply(list.slope$G09, data.frame))
-
-#####
-```
-
-COMPERE C2-TAX AND 103 TO B2 TAX WITH 23  
-
-
-```{r}
-B2.slop$name<-"B2"
-q<-quantile(B2.slop[,1])
-ind<-which(B2.slop$slope > q[["25%"]] & B2.slop$slope < q[["75%"]])
-B2.slop.correct<-B2.slop[ind,]
-C2.slop$name<-"C2"
-q<-quantile(C2.slop[,1])
-ind<-which(C2.slop$slope > q[["25%"]] & C2.slop$slope < q[["75%"]])
-C2.slop.correct<-C2.slop[ind,]
-sum(B2.slop.correct$slope)
-
-
-      nsim<-924
-      C2rand<-C2.slop$slope
-      B2rand<-B2.slop$slope
-      combine.df.slope<-c(C2rand,B2rand)
-      #namber<-c(rep(1,3),rep(2,3))
-      combine.df.name<-c(rep(1,12),rep(2,12))
-      dif.obse<-abs(mean(C2rand)-mean(B2rand))
-      diffres<-rep(NA,nsim)
-for (i in 1:nsim){
-  
-  sufffled.lables<-sample(combine.df.name, replace = F)
-  diffres[i]<-abs(mean(combine.df.slope[sufffled.lables ==1]) - mean(combine.df.slope[sufffled.lables == 2]))
-}
-
-#calculate the two sided pvalue
-pv<- length(diffres[abs(diffres) >= abs(dif.obse)])/nsim
-print(pv)
-
-```
-
 
 
 
@@ -1293,7 +426,7 @@ fig2<-fig2 + geom_ribbon(data=newdata.t_C1, aes(x=day0t, y=p.t, ymin=pmin.t, yma
 fig2<-fig2 +  geom_line(data=newdata.t_C1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
 
 
-fig2<-fig2 + geom_point(data=drc.ctrl_C2,aes(drc.ctrl_C3$vec.day,drc.ctrl_C3$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
+fig2<-fig2 + geom_point(data=drc.ctrl_C2,aes(drc.ctrl_C2$vec.day,drc.ctrl_C2$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
 fig2<-fig2 +   geom_ribbon(data=newdata.t_C2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
 fig2<-fig2 + geom_line(data=newdata.t_C2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
 
@@ -1316,73 +449,6 @@ ylim(0,1.3)+
 #element_line(colour = "white")
 fig2
 ```
-Tax23
 
-```{r}
-B2.slop$name<-"B2"
-q<-quantile(B2.slop[,1])
-ind<-which(B2.slop$slope > q[["25%"]] & B2.slop$slope < q[["75%"]])
-B2.slop.correct<-B2.slop[ind,]
-B1.slop$name<-"B1"
-q<-quantile(B1.slop[,1])
-ind<-which(B1.slop$slope > q[["25%"]] & B1.slop$slope < q[["75%"]])
-B1.slop.correct<-B1.slop[ind,]
-sum(B1.slop.correct$slope)
-
-
-      nsim<-924
-      B2rand<-B2.slop$slope
-      B1rand<-B1.slop$slope
-      combine.df.slope<-c(B2rand,B1rand)
-      #namber<-c(rep(1,3),rep(2,3))
-      combine.df.name<-c(rep(1,12),rep(2,12))
-      dif.obse<-abs(mean(B2rand)-mean(B1rand))
-      diffres<-rep(NA,nsim)
-for (i in 1:nsim){
-  
-  sufffled.lables<-sample(combine.df.name, replace = F)
-  diffres[i]<-abs(mean(combine.df.slope[sufffled.lables ==1]) - mean(combine.df.slope[sufffled.lables == 2]))
-}
-
-#calculate the two sided pvalue
-pv<- length(diffres[abs(diffres) >= abs(dif.obse)])/nsim
-print(pv)
-
-```
-
-
-
-
-
-```{r}
-fig2<-ggplot()
-fig2<-fig2 +  geom_point(data=drc.ctrl_B1,aes(drc.ctrl_C1$vec.day,drc.ctrl_C1$vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0)
-fig2<-fig2 + geom_ribbon(data=newdata.t_B1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4")
-fig2<-fig2 +  geom_line(data=newdata.t_B1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
-
-
-fig2<-fig2 + geom_point(data=drc.ctrl_B2,aes(drc.ctrl_C3$vec.day,drc.ctrl_C3$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
-fig2<-fig2 +   geom_ribbon(data=newdata.t_B2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
-fig2<-fig2 + geom_line(data=newdata.t_B2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
-
-
-fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.x =element_text(size = 14))+
-theme(axis.title.y =element_text(size = 14))+
-theme(axis.text = element_text(size=12))+
-theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
-theme(axis.text.x = element_text( hjust = 1))+
-labs(title="C", x="dayes", y="Cell number(%)") +
-ylim(0,1.3)+
-  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
-  geom_text(aes(x=10, label="23", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=10, label="23 and tax", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  geom_text(aes(x=4, label="ns", y=0.4,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
-  theme(panel.border = element_blank(),panel.background = element_blank())+
-  theme(panel.grid.minor = element_line(colour = "white"))
-#theme(axis.text.x=element_blank())
-#element_line(colour = "white")
-fig2
-```
 
 
