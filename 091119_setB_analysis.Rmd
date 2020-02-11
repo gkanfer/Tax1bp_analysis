@@ -268,8 +268,8 @@ drc.ctrl_A2<-drc.table(A2.df,NULL)
 drc.ctrl_A3<-drc.table(A3.df,NULL)
 drc.ctrl_A4<-drc.table(A4.df,NULL)
 
-drc.ctrl_B1<-drc.table(B1.df)
-drc.ctrl_B2<-drc.table(B2.df)
+drc.ctrl_B1<-drc.table(B1.df,drc.ctrl_A1)
+drc.ctrl_B2<-drc.table(B2.df,drc.ctrl_A2)
 drc.ctrl_B3<-drc.table(B3.df)
 drc.ctrl_B4<-drc.table(B4.df)
 
@@ -387,8 +387,8 @@ expend.table<-function(df.input){
 # drc.ctrl_A3<-add.df("A3",drc.ctrl_A3)
 # drc.ctrl_A4<-add.df("A4",drc.ctrl_A4)
 # 
-# drc.ctrl_B1<-add.df("B1",drc.ctrl_B1)
-# drc.ctrl_B2<-add.df("B2",drc.ctrl_B2)
+drc.ctrl_B1<-add.df("B1",drc.ctrl_B1)
+drc.ctrl_B2<-add.df("B2",drc.ctrl_B2)
 # drc.ctrl_B3<-add.df("B3",drc.ctrl_B3)
 # drc.ctrl_B4<-add.df("B4",drc.ctrl_B4)
 
@@ -403,8 +403,8 @@ drc.ctrl_C2<-add.df("C2",drc.ctrl_C2)
 # newdata.t_A3<-expend.table(drc.ctrl_A3)
 # newdata.t_A4<-expend.table(drc.ctrl_A4)
 # 
-# newdata.t_B1<-expend.table(drc.ctrl_B1)
-# newdata.t_B2<-expend.table(drc.ctrl_B2)
+newdata.t_B1<-expend.table(drc.ctrl_B1)
+newdata.t_B2<-expend.table(drc.ctrl_B2)
 # newdata.t_B3<-expend.table(drc.ctrl_B3)
 # newdata.t_B4<-expend.table(drc.ctrl_B4)
 
@@ -417,7 +417,7 @@ newdata.t_C2<-expend.table(drc.ctrl_C2)
 
 ```
 
-
+C
 
 ```{r}
 fig2<-ggplot()
@@ -449,6 +449,36 @@ ylim(0,1.3)+
 #element_line(colour = "white")
 fig2
 ```
+B
+```{r}
+fig2<-ggplot()
+fig2<-fig2 +  geom_point(data=drc.ctrl_B1,aes(drc.ctrl_B1$vec.day,drc.ctrl_B1$vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0)
+fig2<-fig2 + geom_ribbon(data=newdata.t_B1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4")
+fig2<-fig2 +  geom_line(data=newdata.t_B1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
 
+
+fig2<-fig2 + geom_point(data=drc.ctrl_B2,aes(drc.ctrl_B2$vec.day,drc.ctrl_B2$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
+fig2<-fig2 +   geom_ribbon(data=newdata.t_B2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
+fig2<-fig2 + geom_line(data=newdata.t_B2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
+
+
+fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
+theme(axis.title.x =element_text(size = 14))+
+theme(axis.title.y =element_text(size = 14))+
+theme(axis.text = element_text(size=12))+
+theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
+theme(axis.text.x = element_text( hjust = 1))+
+labs(title="C", x="dayes", y="Cell number(%)") +
+ylim(0,1.3)+
+  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
+  geom_text(aes(x=10, label="23", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
+  geom_text(aes(x=10, label="23 and tax", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
+  geom_text(aes(x=4, label="p < 0.03", y=0.4,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
+  theme(panel.border = element_blank(),panel.background = element_blank())+
+  theme(panel.grid.minor = element_line(colour = "white"))
+#theme(axis.text.x=element_blank())
+#element_line(colour = "white")
+fig2
+```
 
 
