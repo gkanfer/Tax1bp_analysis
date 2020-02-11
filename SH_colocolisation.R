@@ -180,7 +180,7 @@ for (m in 1:dim(stack)[3]){
 stack<-stack[,,ind]
 stack.UB<-stack.UB[,,ind]
 
-stack.temp<-stack[,,2]
+stack.temp<-stack[,,1]
 display(stack.temp,"raster")
 
 
@@ -190,35 +190,47 @@ display(stack.temp,"raster")
 
 
 # #display(stack.UB*10,"raster",all=T)
+#
+#
+stack.temp.ub<-stack.UB[,,1]
+display(stack.temp.ub*2,"raster")
+
+# roi1.red = thresh(stack.temp.ub, 100, 100,0.004)
+# display(colorLabels(roi1.red),"raster")
+roi2.red = thresh(stack.temp.ub, 4, 4,0.02)
+display(roi2.red,"raster")
+R<-ifelse(roi2.red > 0,stack.temp.ub,0)
+display(R*10,"raster")
+
+roi2 = thresh(stack.temp, 4, 4,0.15)
+G<-ifelse(roi2 > 0,stack.temp,0)
+display(G*10,"raster")
+Gcol<-ifelse(R > 0,G,0)
+Gsum<-ifelse(G > 0,G,0)
+m2<-(sum(as.vector(Gcol)))/(sum(as.vector(G)))
+
+#     
+#     Rcol<-ifelse(stack.temp)
+#     overlap.roi<-roi2 + roi2.red
+#     overlap.G<-ifelse(overlap.roi > 0 ,stack.temp,0)
+#     display(overlap.G,"raster")
+# 
+#     
+#     Green.inten<-computeFeatures.basic(roi1,stack.temp)[1]
 # 
 # 
-# stack.temp.ub<-stack.UB[,,2]
-# display(stack.temp.ub*2,"raster")
 # 
-# # roi1.red = thresh(stack.temp.ub, 100, 100,0.004)
-# # display(colorLabels(roi1.red),"raster")
-# roi2.red = thresh(stack.temp.ub, 4, 4,0.02)
-# display(colorLabels(roi2.red),"raster")
-# red.inten<-computeFeatures.basic(roi2.red,stack.temp.ub)[1]
-# # roi1 = thresh(stack.temp, 100, 100,0.004)
-# # display(colorLabels(roi1),"raster")
-# roi2 = thresh(stack.temp, 4, 4,0.15)
-# display(colorLabels(roi2),"raster")
-# Green.inten<-computeFeatures.basic(roi1,stack.temp)[1]
-
-
-
-
-
-m1<-(computeFeatures.basic(roi2.red,stack.temp)[1])/(computeFeatures.basic(roi2,stack.temp)[1])
-m2<-(computeFeatures.basic(roi2,stack.temp)[1])/(computeFeatures.basic(roi2,stack.temp.ub)[1])
-m<-m1*m2
-
-dev.new("red")
-display(stack,"raster",all=T)
-dev.new("red")
-display(stack.UB*5,"raster",all=T)
-dev.new("red")
-display(GFP*5,"raster",all=T)
-dev.new("red")
-display(UB*20,"raster",all=T)
+# 
+# 
+# m1<-(computeFeatures.basic(roi2.red,stack.temp)[1])/(computeFeatures.basic(roi2,stack.temp)[1])
+# m2<-(computeFeatures.basic(roi2,stack.temp)[1])/(computeFeatures.basic(roi2,stack.temp.ub)[1])
+# m<-m1*m2
+# 
+# dev.new("red")
+# display(stack,"raster",all=T)
+# dev.new("red")
+# display(stack.UB*5,"raster",all=T)
+# dev.new("red")
+# display(GFP*5,"raster",all=T)
+# dev.new("red")
+# display(UB*20,"raster",all=T)
