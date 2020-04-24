@@ -1,0 +1,454 @@
+---
+title: "Report 2"
+output: html_notebook
+---
+070319 second report
+
+
+```{r}
+library("ggplot2")
+library("ggrepel")
+library("data.table")
+library("dplyr")
+library("tidyr")
+library("readxl")
+library("outliers")
+library("yaImpute")
+library("stringr")
+library("gtools")
+library("RColorBrewer")
+library("drc")
+library("lattice")
+library("beeswarm")
+library("svglite")
+
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=5, fig.height=5, 
+                      include = FALSE, warning=FALSE, message=FALSE)
+```
+
+
+Creat lits of all the observations per well
+
+```{r}
+setwd("/Users/kanferg/Desktop/temp/Shireen/Expirement_3/txt_files/") 
+txt.nd<-dir()[grep(".txt",dir())]
+txt.df<-as.data.frame(matrix(0,0,2))
+x<-read.table(txt.nd[1])
+x<-x[2,1]
+x<-as.numeric(as.character(x))
+txt.df[1,1]<-txt.nd[1]
+txt.df[1,2]<-x
+for (i in 2:length(txt.nd)){
+  x<-try(read.table(txt.nd[i]))
+  if (inherits(x, "try-error")) {
+    txt.df[i,1]<-txt.nd[i] 
+    txt.df[i,2]<-0
+  } else {
+    x<-x[2,1]
+    x<-as.numeric(as.character(x))
+    txt.df[i,1]<-txt.nd[i]
+    txt.df[i,2]<-x
+    print(i)}
+}
+
+# 
+# for (i in 2:length(txt.nd)){
+#   tryCatch({
+#   x<-read.table(txt.nd[i])
+#   x<-x[2,1]
+#   x<-as.numeric(as.character(x))
+#   txt.df[i,1]<-txt.nd[i]
+#   txt.df[i,2]<-x
+#   print(i)}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+# }
+row.has.na <- apply(txt.df, 1, function(x){any(is.na(x))})
+txt.df <- txt.df[!row.has.na,]
+
+#B02 is named different the rest so will make two tables
+#remove all the 
+# ind.b02<-grep("WellB02",txt.df$V1)
+# txt.df.bo2<-txt.df[ind.b02,]
+# txt.df<-txt.df[-ind.b02,]
+
+
+
+colnames(txt.df)<-c("File_name","cellNumber")
+head(txt.df)
+txt.df$split<-txt.df$File_name
+rm(df.names)
+df.names<-tidyr::separate(txt.df,split,into=c("Well","seq","date","xy",".txt"))
+colnames(df.names)<-c("File_name","cellNumber","well","date","time","seq","postion")
+df.names$well<-gsub("Well","",df.names$well)
+########the lists will be spreated by Well > date > time > seq  ---- every matrix should be 12columns and 10 rows
+unique.df.well<-unique(df.names$well)
+View(unique.df.well)
+ind.well<-c(9,10,19,20,29,30,39,40,49,50,59,60)
+unique.df.well<-unique.df.well[-ind.well]
+unique.df.date<-unique(df.names$date)
+#unique.df.seq<-unique(df.names$seq)
+unique.df.time<-unique(df.names$time)
+unique.df.time.even<-unique.df.time[which(even(1:22))]
+unique.df.time.odd<-unique.df.time[which(odd(1:22))]
+df.tax.a<-as.data.frame(matrix(0,6,11))
+df.tax.b<-as.data.frame(matrix(0,6,11))
+colnames(df.tax.a)<-c(unique.df.date)
+colnames(df.tax.b)<-c(unique.df.date)
+
+
+df.tax.a<-as.data.frame(matrix(0,6,11))
+df.tax.b<-as.data.frame(matrix(0,6,11))
+
+rm(list.observation)
+list.observation.a<-list()
+#even
+for (i in unique.df.well){
+  df.well<-filter(df.names,well==i)
+  for (j in 1:length(unique.df.date)){
+    #browser()
+    df.day<-filter(df.well,date==unique.df.date[j]) 
+    num<-as.numeric(df.day[c(1:6),2])
+    if (length(num)!=6){
+      next()
+    } else {df.tax.a[,j]<-num}
+  }
+  list.observation.a[[paste0(i)]]<-df.tax.a
+  print(i)
+}
+
+df.tax.b<-as.data.frame(matrix(0,6,11))
+list.observation.b<-list()
+count.ind=1
+#even
+for (i in unique.df.well){
+  df.well<-filter(df.names,well==i)
+  for (j in 1:length(unique.df.date)){
+    #browser()
+    df.day<-filter(df.well,date==unique.df.date[j]) 
+    num<-as.numeric(df.day[c(7:12),2])
+    if (length(num)!=6){
+      next()
+    } else {df.tax.b[,j]<-num}
+  }
+  list.observation.b[[paste0(i)]]<-df.tax.b
+  print(i)
+}
+
+```
+
+
+
+
+read Excel file
+
+```{r}
+setwd("~/Desktop/temp/Shireen/Expirement_3")
+key.mat<-read_excel("Plate_Map.xlsx")
+key.mat<-as.data.frame(key.mat[c(1:6),])
+key.chare<-c("B0","C0","D0","E0","F0","G0")
+key.num<-c(2:9)
+list.key<-list()
+list.temp<-list()
+for(i in 1:6){
+  for(j in 1:8){
+    list.key[[paste0(key.chare[i],key.num[j])]]<-paste0(key.chare[i],key.num[j])
+    
+  }
+  
+}
+key<-as.vector(unlist(list.key,recursive = TRUE, use.names = FALSE))
+vec<-as.vector(c(key.mat[1,2:9],key.mat[2,2:9],key.mat[3,2:9],key.mat[4,2:9],key.mat[5,2:9],key.mat[6,2:9]))
+str(key)
+key<-as.data.frame(as.character(key))
+
+key$treatment<-as.vector(as.character(vec))
+key$`as.character(key)`<-as.character(key$`as.character(key)`)
+
+```
+
+creat a list of data frames beased on the key
+
+```{r}
+#''unique.treatment - The treatment we are intrested in
+#list.observation.a - list of data frames where every data frame contain all the observation over time
+#key - data frame translating tratment to well postion
+#returns data frame containing all the observations
+extract.treatment.observation<-function(unique.treatment,list.observation.a,key){
+  name.key<-unique.treatment
+  list.name<-key[which(key[,2]==name.key),1]
+  list.extract<-list() 
+  df<-as.data.frame(matrix(0,0,11))
+  for (i in list.name){
+      df.temp<-as.data.frame(list.observation.a[[paste0(i)]])
+      df<-rbind(df,df.temp)
+  }
+  return(df)
+  }
+```
+
+Aggragate observation per traetment
+
+
+
+
+```{r}
+A1.df<-extract.treatment.observation("1A",list.observation.a,key)
+A2.df<-extract.treatment.observation("2A",list.observation.a,key)
+A3.df<-extract.treatment.observation("3A",list.observation.a,key)
+A4.df<-extract.treatment.observation("4A",list.observation.a,key)
+
+B1.df<-extract.treatment.observation("1B",list.observation.a,key)
+B2.df<-extract.treatment.observation("2B",list.observation.a,key)
+B3.df<-extract.treatment.observation("3B",list.observation.a,key)
+B4.df<-extract.treatment.observation("4B",list.observation.a,key)
+
+C1.df<-extract.treatment.observation("1C",list.observation.a,key)
+C2.df<-extract.treatment.observation("2C",list.observation.a,key)
+C3.df<-extract.treatment.observation("3C",list.observation.a,key)
+C4.df<-extract.treatment.observation("4C",list.observation.a,key)
+
+```
+
+The effect of untreated is corrected
+TAX(-)103(1C) minus the effect of TAX(-)(1A)
+TAX(+)103(2C) minus the effect of TAX(+)(2A)
+
+
+```{r}
+rm(df.ctrl.drc)
+drc.table<-function(input.df,df.correc){
+  if (is.null(df.correc)){
+     vec.delta=rep(1,12)
+  }else{
+      time<-unique(df.correc[,1])
+      l<-list()
+      for (i in time){
+        df.temp<-df.correc %>% filter(df.correc[,1]==i)
+        vec<-mean(df.temp[,2])
+        l[[i]]<-vec
+      }
+      df.mat<-as.data.frame(l,stringsAsFactors=F)
+      df.mat<-as.data.frame(t(df.mat),stringsAsFactors=F)
+      df.mat$time<-time
+      vec.delta<-1-df.mat$V1
+      vec.delta<-1+vec.delta
+  }
+  df.ctrl.drc<-as.data.frame(matrix(0,0,2))
+  colnames(df.ctrl.drc)<-c("day","cellNumber")
+  colnames(input.df)<-c(1:11)
+  input<-input.df[,c(1:11)]
+  mean.c<-median(input[,1])
+  li<-list(NULL)
+  ctrl.temp<-rep(1,length(input[,1]))
+  li[[1]]<-ctrl.temp
+  for (i in 2:11){
+        ctrl.temp<-(input[,i]*vec.delta[i])/mean.c
+        li[[paste0(i)]]<-ctrl.temp
+  }
+  vec.num<-as.vector(li[[1]])
+  vec.day<-rep(1,length(vec.num))
+  df.ctrl.drc<-cbind(vec.day,vec.num)
+  
+  for (j in 2:11){
+        vec.num<-as.vector(li[[paste0(j)]])
+        vec.day<-rep(j,length(vec.num))  
+        df.ctrl.drc.temp<-cbind(vec.day,vec.num)
+        df.ctrl.drc<-rbind(df.ctrl.drc,df.ctrl.drc.temp)
+  }
+  
+  df.ctrl.drc<-as.data.frame(df.ctrl.drc)
+  return(df.ctrl.drc)
+}
+########
+
+drc.ctrl_A1<-drc.table(A1.df,NULL)
+drc.ctrl_A2<-drc.table(A2.df,NULL)
+drc.ctrl_A3<-drc.table(A3.df,NULL)
+drc.ctrl_A4<-drc.table(A4.df,NULL)
+
+drc.ctrl_B1<-drc.table(B1.df)
+drc.ctrl_B2<-drc.table(B2.df)
+drc.ctrl_B3<-drc.table(B3.df)
+drc.ctrl_B4<-drc.table(B4.df)
+
+drc.ctrl_C1<-drc.table(C1.df,drc.ctrl_A1)
+drc.ctrl_C2<-drc.table(C2.df,drc.ctrl_A2)
+drc.ctrl_C3<-drc.table(C3.df)
+drc.ctrl_C4<-drc.table(C4.df)
+ 
+
+
+add.df<-function(txtinput,input){
+  txt<-txtinput
+  name.vec<-rep(paste(txt),nrow(input))
+  input$treatment<-as.character(name.vec)
+  return(input)
+}
+
+
+
+
+
+#remove the number from the 
+
+
+```
+
+
+
+
+```{r}
+
+make.plot<-function(df.temp){
+drc.plot<-drm(df.temp$survival_rate~df.temp$day,data = df.temp, fct = EXD.2(),na.action = na.omit)
+}
+
+
+
+
+  
+  
+expand_grid<-function (..., KEEP.OUT.ATTRS = TRUE, stringsAsFactors= getOption("stringsAsFactors")) 
+{
+    nargs <- length(args <- list(...))
+    if (!nargs) 
+        return(as.data.frame(list()))
+    if (nargs == 1L && is.list(a1 <- args[[1L]])) 
+        nargs <- length(args <- a1)
+    if (nargs == 0L) 
+        return(as.data.frame(list()))
+    cargs <- vector("list", nargs)
+    iArgs <- seq_len(nargs)
+    nmc <- paste0("Var", iArgs)
+    nm <- names(args)
+    if (is.null(nm)) 
+        nm <- nmc
+    else if (any(ng0 <- nzchar(nm))) 
+        nmc[ng0] <- nm[ng0]
+    names(cargs) <- nmc
+    rep.fac <- 1L
+    d <- lengths(args)
+    if (KEEP.OUT.ATTRS) {
+        dn <- vector("list", nargs)
+        names(dn) <- nmc
+    }
+    orep <- prod(d)
+    if (orep == 0L) {
+        for (i in iArgs) cargs[[i]] <- args[[i]][FALSE]
+    }
+    else {
+        for (i in iArgs) {
+            x <- args[[i]]
+            if (KEEP.OUT.ATTRS) 
+                dn[[i]] <- paste0(nmc[i], "=", if (is.numeric(x)) 
+                  format(x)
+                else x)
+            nx <- length(x)
+            orep <- orep/nx
+            x <- x[rep.int(rep.int(seq_len(nx), rep.int(rep.fac, 
+                nx)), orep)]
+            if (stringsAsFactors && is.character(x) && !is.factor(x)) 
+                x <- factor(x, levels = unique(x))
+            cargs[[i]] <- x
+            rep.fac <- rep.fac * nx
+        }
+    }
+    if (KEEP.OUT.ATTRS) 
+        attr(cargs, "out.attrs") <- list(dim = d, dimnames = dn)
+    rn <- .set_row_names(as.integer(prod(d)))
+    structure(cargs, class = "data.frame", row.names = rn)
+}      
+  
+  
+expand_grid <- 
+   function(...,stringsAsFactors= getOption("stringsAsFactors"))
+     expand.grid(...,stringsAsFactors=stringsAsFactors)             
+
+
+expend.table<-function(df.input){
+      colnames(df.input)<-c("day","survival_rate","Treatment")
+      ind<-which(is.na(df.input$survival_rate))
+      df.input_p<-make.plot(df.input)
+      summary(df.input_p)
+      options(stringsAsFactors = FALSE)
+      newdata.t <- expand_grid(day0t=seq(1, 11, length=1000)) 
+      pm.t <- predict(df.input_p, newdata=newdata.t, interval="confidence") 
+      newdata.t$p.t<-pm.t[,1]
+      newdata.t[1,2]<-1
+      newdata.t$pmin.t<-pm.t[,2] 
+      newdata.t$pmax.t<-pm.t[,3]
+      return(newdata.t)
+}
+
+# drc.ctrl_A1<-add.df("A1",drc.ctrl_A1)
+# drc.ctrl_A2<-add.df("A2",drc.ctrl_A2)
+# drc.ctrl_A3<-add.df("A3",drc.ctrl_A3)
+# drc.ctrl_A4<-add.df("A4",drc.ctrl_A4)
+# 
+# drc.ctrl_B1<-add.df("B1",drc.ctrl_B1)
+# drc.ctrl_B2<-add.df("B2",drc.ctrl_B2)
+# drc.ctrl_B3<-add.df("B3",drc.ctrl_B3)
+# drc.ctrl_B4<-add.df("B4",drc.ctrl_B4)
+
+drc.ctrl_C1<-add.df("C1",drc.ctrl_C1)
+drc.ctrl_C2<-add.df("C2",drc.ctrl_C2)
+# drc.ctrl_C3<-add.df("C3",drc.ctrl_C3)
+# drc.ctrl_C4<-add.df("C4",drc.ctrl_C4)
+
+
+# newdata.t_A1<-expend.table(drc.ctrl_A1)
+# newdata.t_A2<-expend.table(drc.ctrl_A2)
+# newdata.t_A3<-expend.table(drc.ctrl_A3)
+# newdata.t_A4<-expend.table(drc.ctrl_A4)
+# 
+# newdata.t_B1<-expend.table(drc.ctrl_B1)
+# newdata.t_B2<-expend.table(drc.ctrl_B2)
+# newdata.t_B3<-expend.table(drc.ctrl_B3)
+# newdata.t_B4<-expend.table(drc.ctrl_B4)
+
+newdata.t_C1<-expend.table(drc.ctrl_C1)
+newdata.t_C2<-expend.table(drc.ctrl_C2)
+# newdata.t_C3<-expend.table(drc.ctrl_C3)
+# newdata.t_C4<-expend.table(drc.ctrl_C4)
+
+
+
+```
+
+
+
+```{r}
+fig2<-ggplot()
+fig2<-fig2 +  geom_point(data=drc.ctrl_C1,aes(drc.ctrl_C1$vec.day,drc.ctrl_C1$vec.num),inherit.aes = F,fill="#1F78B4",col="#1F78B4" ,alpha=0)
+fig2<-fig2 + geom_ribbon(data=newdata.t_C1, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4,inherit.aes = F,fill="#1F78B4")
+fig2<-fig2 +  geom_line(data=newdata.t_C1, aes(x=day0t, y=p.t),inherit.aes = F,fill="#1F78B4",alpha=1, col="#1F78B4")
+
+
+fig2<-fig2 + geom_point(data=drc.ctrl_C2,aes(drc.ctrl_C2$vec.day,drc.ctrl_C2$vec.num),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=0)
+fig2<-fig2 +   geom_ribbon(data=newdata.t_C2, aes(x=day0t, y=p.t, ymin=pmin.t, ymax=pmax.t), alpha=0.4, alpha=0.1,inherit.aes = F,fill="#E31A1C")
+fig2<-fig2 + geom_line(data=newdata.t_C2, aes(x=day0t, y=p.t),inherit.aes = F,fill="#E31A1C",col="#E31A1C" ,alpha=1)
+
+
+fig2<-fig2 + theme(axis.title.x =element_text(size = 14))+
+theme(axis.title.x =element_text(size = 14))+
+theme(axis.title.y =element_text(size = 14))+
+theme(axis.text = element_text(size=12))+
+theme(axis.line = element_line(colour = "black",size=1), panel.border = element_blank(),panel.background = element_blank())+
+theme(axis.text.x = element_text( hjust = 1))+
+labs(title="C", x="dayes", y="Cell number(%)") +
+ylim(0,1.3)+
+  scale_x_continuous(breaks = (seq(1, 15, by = 1)))+
+  geom_text(aes(x=10, label="103", y=1,inherit.aes = F),color="#1F78B4",show.legend = F, text=element_text(size=14)) +
+  geom_text(aes(x=10, label="103 and tax", y=0.9,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
+  geom_text(aes(x=4, label="p < 0.03", y=0.4,inherit.aes = F), color="#E31A1C",show.legend = F, text=element_text(size=14)) +
+  theme(panel.border = element_blank(),panel.background = element_blank())+
+  theme(panel.grid.minor = element_line(colour = "white"))
+#theme(axis.text.x=element_blank())
+#element_line(colour = "white")
+fig2
+```
+
+
+
